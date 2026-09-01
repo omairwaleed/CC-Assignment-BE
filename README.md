@@ -45,7 +45,7 @@ NestJS + Prisma + Supabase backend. Follows the same structure/conventions as SF
    npm run start:dev
    ```
 
-- API docs: http://localhost:3000/api-docs
+- API docs: https://cc-assignment-be.onrender.com/api-docs
 
 ## Data model
 
