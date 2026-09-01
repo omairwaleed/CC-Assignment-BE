@@ -1,6 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { IdempotencyModule } from './common/idempotency/idempotency.module';
 import { RequestLoggerMiddleware } from './common/middleware/request-logger.middleware';
 import { AppointmentsModule } from './modules/appointments/appointments.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -13,6 +14,7 @@ import { SupabaseModule } from './supabase/supabase.module';
 @Module({
   imports: [
     PrismaModule,
+    IdempotencyModule,
     SupabaseModule,
     AuthModule,
     DoctorsModule,

@@ -44,6 +44,23 @@ model Appointment {
   @@map("appointments")
 }
 
+/// Records one client-supplied Idempotency-Key per logical POST action so a
+/// retried request replays the original response instead of creating a duplicate.
+model IdempotencyKey {
+  key          String   @id
+  method       String
+  path         String
+  requestHash  String   @map("request_hash")
+  status       String   @default("processing")
+  statusCode   Int?     @map("status_code")
+  responseBody Json?    @map("response_body")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@index([createdAt])
+  @@map("idempotency_keys")
+}
+
 model ImagingStudy {
   id            String  @id @default(uuid()) @db.Uuid
   appointmentId String  @map("appointment_id") @db.Uuid

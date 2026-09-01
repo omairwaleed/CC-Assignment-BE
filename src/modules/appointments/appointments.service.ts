@@ -12,23 +12,14 @@ import { UpdateAppointmentStatusDto } from './dto/update-appointment-status.dto'
 
 @Injectable()
 export class AppointmentsService {
-  constructor(private readonly appointments: AppointmentsRepository) { }
+  constructor(private readonly appointments: AppointmentsRepository) {}
 
   async create(dto: CreateAppointmentDto) {
-    const existing = await this.appointments.appointmentExists(dto.id);
-
-    if (existing) {
-      throw new ConflictException(
-        'An appointment with this id already exists.',
-      );
-    }
     const doctor = await this.appointments.doctorExists(dto.doctorId);
 
     if (!doctor) {
       throw new BadRequestException('doctorId does not reference a known doctor.');
     }
-
-
 
     const startsAt = new Date(dto.startsAt);
     const endsAt = new Date(startsAt.getTime() + dto.durationMinutes * 60_000);
@@ -45,27 +36,13 @@ export class AppointmentsService {
       );
     }
 
-    try {
-      return await this.appointments.create({
-        id: dto.id,
-        patientName: dto.patientName,
-        doctorId: dto.doctorId,
-        startsAt,
-        endsAt,
-        reason: dto.reason,
-      });
-    } catch (error) {
-      // Two concurrent requests can both pass the check above; the DB's unique
-      // constraint on the primary key is the final guard against a duplicate id.
-      if (
-        error instanceof Prisma.PrismaClientKnownRequestError &&
-        error.code === 'P2002'
-      ) {
-        throw new ConflictException('An appointment with this id already exists.');
-      }
-
-      throw error;
-    }
+    return this.appointments.create({
+      patientName: dto.patientName,
+      doctorId: dto.doctorId,
+      startsAt,
+      endsAt,
+      reason: dto.reason,
+    });
   }
 
   findAll(query: FindAppointmentsQueryDto = {}) {

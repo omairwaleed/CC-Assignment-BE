@@ -49,11 +49,4 @@ export class AppointmentsRepository {
       select: { id: true },
     });
   }
-
-  appointmentExists(id: string) {
-    return this.prisma.appointment.findUnique({
-      where: { id },
-      select: { id: true },
-    });
-  }
 }

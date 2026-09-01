@@ -7,8 +7,16 @@ import {
   Post,
   Query,
   UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiHeader,
+  ApiOperation,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
+import { IdempotencyInterceptor } from '../../common/idempotency/idempotency.interceptor';
 import { SupabaseAuthGuard } from '../auth/guards/supabase-auth.guard';
 import { CreateImagingStudyDto } from './dto/create-imaging-study.dto';
 import { ImagingStudiesService } from './imaging-studies.service';
@@ -21,6 +29,12 @@ export class ImagingStudiesController {
   constructor(private readonly imagingStudiesService: ImagingStudiesService) {}
 
   @Post()
+  @UseInterceptors(IdempotencyInterceptor)
+  @ApiHeader({
+    name: 'Idempotency-Key',
+    description: 'A client-generated key that makes a retried request safe.',
+    required: true,
+  })
   @ApiOperation({ summary: 'Attach an imaging study to an appointment' })
   create(@Body() dto: CreateImagingStudyDto) {
     return this.imagingStudiesService.create(dto);
