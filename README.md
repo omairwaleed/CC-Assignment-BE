@@ -52,7 +52,7 @@ NestJS + Prisma + Supabase backend. Follows the same structure/conventions as SF
 | Entity          | Fields                                                                                              |
 | --------------- | ------------------------------------------------------------------------------------------------------ |
 | `Doctor`        | id, name                                                                                              |
-| `Appointment`   | id, patientName, doctorId, startsAt, durationMinutes, status, reason, createdAt, updatedAt             |
+| `Appointment`   | id, patientName, doctorId, startsAt, **endsAt**, status, reason, createdAt, updatedAt                  |
 | `ImagingStudy`  | id, appointmentId, modality, description, dicomFilePath                                                |
 
 Appointment status: `scheduled`, `checked_in`, `completed`, `cancelled` (Prisma enum `AppointmentStatus`).
