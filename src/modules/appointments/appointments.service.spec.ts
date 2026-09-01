@@ -58,7 +58,9 @@ describe('AppointmentsService', () => {
       await expect(service.create(dto)).resolves.toBe(created);
 
       const startsAt = new Date(dto.startsAt);
-      const endsAt = new Date(startsAt.getTime() + dto.durationMinutes * 60_000);
+      const endsAt = new Date(
+        startsAt.getTime() + dto.durationMinutes * 60_000,
+      );
 
       expect(repository.createSerialized).toHaveBeenCalledWith(
         dto.doctorId,

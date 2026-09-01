@@ -59,7 +59,7 @@ export class AuthController {
       user: {
         id: user.id,
         email: user.email,
-        role: user.user_metadata?.role ?? null,
+        role: (user.user_metadata?.role as string | undefined) ?? null,
       },
     };
   }
@@ -78,7 +78,7 @@ export class AuthController {
     return {
       id: authUser.id,
       email: authUser.email,
-      role: authUser.user_metadata?.role ?? null,
+      role: (authUser.user_metadata?.role as string | undefined) ?? null,
       metadata: authUser.user_metadata,
     };
   }

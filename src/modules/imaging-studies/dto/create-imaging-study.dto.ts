@@ -6,7 +6,10 @@ export class CreateImagingStudyDto {
   @IsUUID()
   appointmentId!: string;
 
-  @ApiProperty({ example: 'CT', description: 'DICOM modality code (CT, MR, XR, US, ...)' })
+  @ApiProperty({
+    example: 'CT',
+    description: 'DICOM modality code (CT, MR, XR, US, ...)',
+  })
   @IsString()
   @MinLength(2)
   modality!: string;

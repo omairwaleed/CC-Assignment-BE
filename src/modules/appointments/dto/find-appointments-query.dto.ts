@@ -8,7 +8,9 @@ export class FindAppointmentsQueryDto {
     description: 'Return appointments that start on this calendar day (UTC).',
   })
   @IsOptional()
-  @Matches(/^\d{4}-\d{2}-\d{2}$/, { message: 'date must be in YYYY-MM-DD format.' })
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: 'date must be in YYYY-MM-DD format.',
+  })
   date?: string;
 
   @ApiPropertyOptional({ format: 'uuid' })

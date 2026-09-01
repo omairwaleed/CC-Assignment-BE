@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  InternalServerErrorException,
-  UnauthorizedException,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { Session, User } from '@supabase/supabase-js';
 import { SupabaseService } from '../../supabase/supabase.service';
 
 @Injectable()
 export class SupabaseAuthService {
-  constructor(private readonly supabaseService: SupabaseService) { }
+  constructor(private readonly supabaseService: SupabaseService) {}
 
   async signInWithPassword(
     email: string,
@@ -38,8 +34,6 @@ export class SupabaseAuthService {
     return data.user;
   }
 
-
-
   getTokenFromRequest(req: {
     headers: { authorization?: string; cookie?: string };
   }): string | undefined {
@@ -51,8 +45,5 @@ export class SupabaseAuthService {
         return headerToken;
       }
     }
-
   }
-
-
 }

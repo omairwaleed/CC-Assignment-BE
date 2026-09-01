@@ -10,7 +10,7 @@ export type CreateSerializedResult =
 
 @Injectable()
 export class AppointmentsRepository {
-  constructor(private readonly prisma: PrismaService) { }
+  constructor(private readonly prisma: PrismaService) {}
 
   create(data: Prisma.AppointmentUncheckedCreateInput) {
     return this.prisma.appointment.create({ data });
@@ -36,14 +36,16 @@ export class AppointmentsRepository {
     return this.prisma.appointment.update({ where: { id }, data });
   }
 
-
-  updateStatusFrom(id: string, from: AppointmentStatus[], to: AppointmentStatus) {
+  updateStatusFrom(
+    id: string,
+    from: AppointmentStatus[],
+    to: AppointmentStatus,
+  ) {
     return this.prisma.appointment.updateMany({
       where: { id, status: { in: from } },
       data: { status: to },
     });
   }
-
 
   /**
    * Runs the overlap check and the insert in one transaction, gated by a

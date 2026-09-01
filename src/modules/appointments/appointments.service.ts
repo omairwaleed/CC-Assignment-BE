@@ -33,7 +33,9 @@ export class AppointmentsService {
     const doctor = await this.appointments.doctorExists(dto.doctorId);
 
     if (!doctor) {
-      throw new BadRequestException('doctorId does not reference a known doctor.');
+      throw new BadRequestException(
+        'doctorId does not reference a known doctor.',
+      );
     }
 
     const startsAt = new Date(dto.startsAt);
