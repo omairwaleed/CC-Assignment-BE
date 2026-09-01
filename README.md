@@ -59,7 +59,6 @@ Appointment status: `scheduled`, `checked_in`, `completed`, `cancelled` (Prisma 
 
 ## Auth
 
-- `POST /auth/login` — `{ email, password }` → Supabase session (`accessToken`, `refreshToken`, `user`).
 - `GET /auth/me` — returns the authenticated user (requires `Authorization: Bearer <accessToken>`).
 - `SupabaseAuthGuard` — verifies the bearer token (or `access-token` cookie) via `supabase.auth.getUser()` and attaches `req.authUser`.
 
