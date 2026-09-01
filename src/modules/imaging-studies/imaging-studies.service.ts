@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
+import { Prisma } from '@prisma/client';
 import { UploadService } from '../upload/upload.service';
 import { ImagingStudiesRepository } from './imaging-studies.repository';
 import { CreateImagingStudyDto } from './dto/create-imaging-study.dto';
@@ -23,12 +24,28 @@ export class ImagingStudiesService {
       );
     }
 
-    return this.studies.create({
-      appointmentId: dto.appointmentId,
-      modality: dto.modality,
-      description: dto.description,
-      dicomFilePath: dto.dicomFilePath,
-    });
+    try {
+      return await this.studies.create({
+        appointmentId: dto.appointmentId,
+        modality: dto.modality,
+        description: dto.description,
+        dicomFilePath: dto.dicomFilePath,
+      });
+    } catch (error) {
+      // The appointment was deleted between the check above and this insert,
+      // so the foreign key no longer resolves. Report it the same way as a
+      // missing appointment rather than surfacing a 500.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2003'
+      ) {
+        throw new BadRequestException(
+          'appointmentId does not reference a known appointment.',
+        );
+      }
+
+      throw error;
+    }
   }
 
   findByAppointment(appointmentId: string) {

@@ -57,6 +57,7 @@ describe('IdempotencyInterceptor', () => {
       create: jest.Mock;
       update: jest.Mock;
       delete: jest.Mock;
+      deleteMany: jest.Mock;
     };
   };
 
@@ -67,6 +68,7 @@ describe('IdempotencyInterceptor', () => {
         create: jest.fn(),
         update: jest.fn(),
         delete: jest.fn(),
+        deleteMany: jest.fn(),
       },
     };
 
@@ -166,11 +168,45 @@ describe('IdempotencyInterceptor', () => {
       status: 'processing',
       statusCode: null,
       responseBody: null,
+      createdAt: new Date(),
     });
 
     await expect(
       interceptor.intercept(context, makeCallHandler()),
     ).rejects.toBeInstanceOf(ConflictException);
+    expect(prisma.idempotencyKey.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it('clears an abandoned processing reservation and re-runs the handler', async () => {
+    const { context } = makeContext({ header: 'key-1', body: { a: 1 } });
+    const requestHash = requestHashOf({ a: 1 });
+    const staleCreatedAt = new Date(Date.now() - 5 * 60_000);
+    const handler = makeCallHandler(of({ id: 'created' }));
+
+    prisma.idempotencyKey.findUnique.mockResolvedValue({
+      key: 'key-1',
+      requestHash,
+      status: 'processing',
+      statusCode: null,
+      responseBody: null,
+      createdAt: staleCreatedAt,
+    });
+    prisma.idempotencyKey.deleteMany.mockResolvedValue({ count: 1 });
+    prisma.idempotencyKey.create.mockResolvedValue({});
+    prisma.idempotencyKey.update.mockResolvedValue({});
+
+    const result$ = await interceptor.intercept(context, handler);
+    const result = await firstValueFrom(result$);
+
+    expect(result).toEqual({ id: 'created' });
+    expect(prisma.idempotencyKey.deleteMany).toHaveBeenCalledWith({
+      where: { key: 'key-1', status: 'processing', createdAt: staleCreatedAt },
+    });
+    expect(prisma.idempotencyKey.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ key: 'key-1' }),
+      }),
+    );
   });
 
   it('rejects when two requests race the reservation insert', async () => {

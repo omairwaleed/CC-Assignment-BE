@@ -16,6 +16,15 @@ import { PrismaService } from '../../prisma/prisma.service';
 const HEADER_NAME = 'idempotency-key';
 
 /**
+ * How long a row may sit in `status = "processing"` before we treat it as an
+ * abandoned reservation left behind by an attempt that died without cleaning
+ * up (process killed, DB blip during the completion write, etc). It must
+ * comfortably exceed the longest a legitimate request can run: the Postgres
+ * statement_timeout is 15s, so 60s leaves a wide margin.
+ */
+const STALE_RESERVATION_MS = 60_000;
+
+/**
  * Makes a POST endpoint safe to retry without creating duplicates (Stripe's
  * Idempotency-Key pattern). The client sends one random key per logical
  * action (not per HTTP attempt); the resource's own id is still generated
@@ -61,15 +70,33 @@ export class IdempotencyInterceptor implements NestInterceptor {
         );
       }
 
-      if (existing.status === 'processing') {
+      if (existing.status !== 'processing') {
+        response.status(existing.statusCode ?? 200);
+
+        return of(existing.responseBody);
+      }
+
+      const reservationAgeMs = Date.now() - existing.createdAt.getTime();
+
+      if (reservationAgeMs < STALE_RESERVATION_MS) {
         throw new ConflictException(
           'A request with this Idempotency-Key is still being processed.',
         );
       }
 
-      response.status(existing.statusCode ?? 200);
-
-      return of(existing.responseBody);
+      // The reservation is older than any request could legitimately run for,
+      // so the attempt that made it died without completing or cleaning up.
+      // Drop the abandoned row and fall through to reserve the key afresh.
+      // Scoped to this exact row (by createdAt) so we never clobber a newer
+      // reservation or a concurrent completion; if it is already gone the
+      // deleteMany is a harmless no-op.
+      await this.prisma.idempotencyKey.deleteMany({
+        where: {
+          key,
+          status: 'processing',
+          createdAt: existing.createdAt,
+        },
+      });
     }
 
     // Reserve the key before running the handler so a second request with the
